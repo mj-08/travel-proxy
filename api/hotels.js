@@ -1,12 +1,18 @@
 export default async function handler(req, res) {
   try {
     const { destination, checkIn, checkOut, adults } = req.query;
+    if (!destination || !checkIn || !checkOut || !adults) {
+      return res.status(400).json({ error: "Missing query parameter(s)" });
+    }
 
-    // Hotelbeds API 인증 값
     const apiKey = process.env.HOTELBEDS_API_KEY;
     const secret = process.env.HOTELBEDS_API_SECRET;
 
-    // 서명 생성: timestamp + apiKey + secret → SHA256
+    if (!apiKey || !secret) {
+      return res.status(500).json({ error: "Hotelbeds 환경변수 미설정" });
+    }
+
+    // Hotelbeds signature: SHA256(apiKey + secret + timestamp)
     const timestamp = Math.floor(Date.now() / 1000);
     const crypto = await import("crypto");
     const signature = crypto
@@ -20,7 +26,7 @@ export default async function handler(req, res) {
       headers: {
         "Api-Key": apiKey,
         "X-Signature": signature,
-        "Accept": "application/json",
+        Accept: "application/json",
       },
     });
 
@@ -30,9 +36,9 @@ export default async function handler(req, res) {
     }
 
     const data = await response.json();
-    res.status(200).json(data);
+    return res.status(200).json(data);
   } catch (err) {
     console.error("hotels API error:", err);
-    res.status(500).json({ error: "Hotelbeds API 호출 실패", detail: err.message });
+    return res.status(500).json({ error: "Hotelbeds API 호출 실패", detail: err.message });
   }
 }
