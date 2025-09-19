@@ -1,6 +1,10 @@
 export default async function handler(req, res) {
   try {
     const { origin, destination, departDate, returnDate, adults } = req.query;
+    if (!origin || !destination || !departDate || !returnDate || !adults) {
+      return res.status(400).json({ error: "Missing query parameter(s)" });
+    }
+
     const token = await getAmadeusToken();
 
     const url = `https://test.api.amadeus.com/v2/shopping/flight-offers?originLocationCode=${origin}&destinationLocationCode=${destination}&departureDate=${departDate}&returnDate=${returnDate}&adults=${adults}&currencyCode=KRW`;
@@ -15,10 +19,10 @@ export default async function handler(req, res) {
     }
 
     const data = await response.json();
-    res.status(200).json(data);
+    return res.status(200).json(data);
   } catch (err) {
     console.error("flights API error:", err);
-    res.status(500).json({ error: "Amadeus API 호출 실패", detail: err.message });
+    return res.status(500).json({ error: "Amadeus API 호출 실패", detail: err.message });
   }
 }
 
