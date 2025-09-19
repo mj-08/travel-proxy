@@ -1,5 +1,3 @@
-import fetch from "node-fetch";
-
 export default async function handler(req, res) {
   try {
     const { origin, destination, departDate, returnDate, adults } = req.query;
@@ -7,12 +5,20 @@ export default async function handler(req, res) {
 
     const url = `https://test.api.amadeus.com/v2/shopping/flight-offers?originLocationCode=${origin}&destinationLocationCode=${destination}&departureDate=${departDate}&returnDate=${returnDate}&adults=${adults}&currencyCode=KRW`;
 
-    const response = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Amadeus API 오류: ${response.status} ${errText}`);
+    }
+
     const data = await response.json();
     res.status(200).json(data);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Amadeus API 호출 실패" });
+    console.error("flights API error:", err);
+    res.status(500).json({ error: "Amadeus API 호출 실패", detail: err.message });
   }
 }
 
@@ -26,6 +32,12 @@ async function getAmadeusToken() {
       client_secret: process.env.AMADEUS_CLIENT_SECRET,
     }),
   });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`토큰 요청 실패: ${response.status} ${errText}`);
+  }
+
   const data = await response.json();
   return data.access_token;
 }
