@@ -1,5 +1,12 @@
 // /api/hotels.js
 // Query: destination(도시코드 예: TYO), checkIn(YYYY-MM-DD), checkOut, adults
+res.setHeader("Access-Control-Allow-Origin", "*");
+res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+if (req.method === "OPTIONS") {
+  return res.status(200).end();
+}
 
 function cors(res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
